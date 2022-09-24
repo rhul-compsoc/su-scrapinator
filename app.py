@@ -1,5 +1,6 @@
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 import chromedriver_autoinstaller
 from selenium import webdriver
@@ -10,22 +11,32 @@ import requests
 import argparse
 from pyvirtualdisplay import Display
 import logger
+import time
 import traceback
+import re
+import json
 
 
 LOGIN_PAGE = "https://www.su.rhul.ac.uk//sso/login.ashx?ReturnUrl=/"
+MEMBER_PAGE = "https://www.su.rhul.ac.uk/organisation/memberlist/7306/"
 MAX_WAIT = 15
 LOCAL_TIME_ZONE = "Europe/London"
+TEST = True
+
+JSON_NAME_TAG = "name"
+JSON_STUDENT_ID_TAG = "student-id"
 
 
 def main():
+    if not TEST:
+        display = Display(visible=0, size=(1080, 1920))
+        display.start()
     args = get_login_details()
-
     chromedriver_autoinstaller.install()
-
     browser = webdriver.Chrome()
 
     login(browser, args)
+    get_members(browser)
     browser.close()
 
 
@@ -34,19 +45,26 @@ def get_login_details():
 
     parser = argparse.ArgumentParser(description="Mark attendance for RHUL")
 
-    parser.add_argument("-u", "--username",
-                        help="Full username for RHUL", required=True)
+    parser.add_argument(
+        "-u", "--username", help="Full username for RHUL", required=True
+    )
 
-    parser.add_argument("-p", "--password",
-                        help="Password for RHUL", required=True)
+    parser.add_argument("-p", "--password", help="Password for RHUL", required=True)
 
-    parser.add_argument("-s", "--start-date",
-                        help="Date to start searching from", type=datetime.fromisoformat, default=start_time)
+    parser.add_argument(
+        "-s",
+        "--start-date",
+        help="Date to start searching from",
+        type=datetime.fromisoformat,
+        default=start_time,
+    )
 
     return vars(parser.parse_args())
 
 
 def login(browser, args):
+    logger.logInfo("Logging in")
+
     # Navigate to Login page
     browser.get(LOGIN_PAGE)
 
@@ -55,8 +73,58 @@ def login(browser, args):
     browser.find_element(By.ID, "passwordInput").send_keys(args["password"])
     browser.find_element(By.ID, "submitButton").click()
 
+    logger.logInfo("Waiting for browser redirect")
+
     return browser.current_url == "https://su.rhul.ac.uk/"
 
+
+def get_members(browser):
+    logger.logInfo("Getting members")
+
+    # Navigate to member page
+    browser.get(MEMBER_PAGE)
+
+    # Display ALL members per page
+    drop = Select(browser.find_element(By.ID, "ctl00_Main_ddPageSize"))
+    drop.select_by_value("0")
+
+    logger.logInfo("Waiting for members to update")
+    time.sleep(10)
+
+    logger.logInfo("Parsing member data")
+    table = browser.find_element(By.ID, "ctl00_Main_gvMembers")
+    outerhtml = table.get_attribute("outerHTML")
+
+    # Parse the HTML table
+    """<tr class="msl_row">
+				<td><a href="/profile/92779/">Playfoot, David</a></td><td>100982832</td>
+			</tr>
+    """
+    rowRegex = re.compile('<tr class="msl_(alt)?row">(.*)</tr>', re.MULTILINE | re.IGNORECASE)
+
+    rows = []
+    while 1:
+        match = rowRegex.search(outerhtml)
+        if match is None:
+            break
+
+        outerhtml = outerhtml[match.end(0):]
+        rows.append(match.group(0))
+
+    logger.logInfo(f"Found {len(rows)} members")
+
+    jsonstruct = []
+    for i in range(len(rows)):
+        # Don't even @ me for this abomination
+        name = re.search('/profile/\\d*/?">(.*)</a>').groups(0)
+        id = re.search("</a></td><td>(\\d*)</td>").groups(0)
+
+        tmp = dict()
+        tmp[JSON_NAME_TAG] = name
+        tmp[JSON_STUDENT_ID_TAG] = id
+        jsonstruct.append(tmp)
+
+    print(json.dumps(rows))
 
 
 if __name__ == "__main__":
