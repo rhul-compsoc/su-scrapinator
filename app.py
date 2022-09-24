@@ -21,7 +21,8 @@ LOGIN_PAGE = "https://www.su.rhul.ac.uk//sso/login.ashx?ReturnUrl=/"
 MEMBER_PAGE = "https://www.su.rhul.ac.uk/organisation/memberlist/7306/"
 MAX_WAIT = 15
 LOCAL_TIME_ZONE = "Europe/London"
-TEST = True
+TEST = False
+SAVE_FULL_DATA = False
 
 JSON_NAME_TAG = "name"
 JSON_STUDENT_ID_TAG = "student-id"
@@ -124,9 +125,12 @@ def get_members(browser):
         name = nameRegex.search(rows[i]).groups(0)[0]
         id = idRegex.search(rows[i]).groups(0)[0]
 
-        tmp = dict()
-        tmp[JSON_NAME_TAG] = name
-        tmp[JSON_STUDENT_ID_TAG] = id
+        if SAVE_FULL_DATA:
+            tmp = dict()
+            tmp[JSON_NAME_TAG] = name
+            tmp[JSON_STUDENT_ID_TAG] = id
+        else:
+            tmp = id
         jsonstruct.append(tmp)
 
     ret = json.dumps(jsonstruct)
