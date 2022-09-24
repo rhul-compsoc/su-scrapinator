@@ -36,7 +36,10 @@ def main():
     browser = webdriver.Chrome()
 
     login(browser, args)
-    get_members(browser)
+    member_json = get_members(browser)
+    f = open("members.json", "w")
+    f.write(member_json)
+    f.close()
     browser.close()
 
 
@@ -89,18 +92,17 @@ def get_members(browser):
     drop.select_by_value("0")
 
     logger.logInfo("Waiting for members to update")
-    time.sleep(10)
+    time.sleep(4)
 
     logger.logInfo("Parsing member data")
     table = browser.find_element(By.ID, "ctl00_Main_gvMembers")
-    outerhtml = table.get_attribute("outerHTML")
+    outerhtml = table.get_attribute("outerHTML").replace("\n", "")
 
     # Parse the HTML table
-    """<tr class="msl_row">
-				<td><a href="/profile/92779/">Playfoot, David</a></td><td>100982832</td>
-			</tr>
-    """
-    rowRegex = re.compile('<tr class="msl_(alt)?row">(.*)</tr>', re.MULTILINE | re.IGNORECASE)
+    #rowRegex = re.compile('<tr class="msl_(alt)?row">(.*)</tr>', re.IGNORECASE)
+    rowRegex = re.compile('(<td><a href="\\/profile\\/\\d*\\/">[,. a-zA-Z]*<\\/a><\\/td><td>\\d*<\\/td>)', re.IGNORECASE)
+    nameRegex = re.compile('/profile/\\d*/?">([,. a-zA-Z]*)</a>', re.IGNORECASE)
+    idRegex = re.compile("</a></td><td>(\\d*)</td>", re.IGNORECASE)
 
     rows = []
     while 1:
@@ -116,15 +118,16 @@ def get_members(browser):
     jsonstruct = []
     for i in range(len(rows)):
         # Don't even @ me for this abomination
-        name = re.search('/profile/\\d*/?">(.*)</a>').groups(0)
-        id = re.search("</a></td><td>(\\d*)</td>").groups(0)
+        name = nameRegex.search(rows[i]).groups(0)[0]
+        id = idRegex.search( rows[i]).groups(0)[0]
 
         tmp = dict()
         tmp[JSON_NAME_TAG] = name
         tmp[JSON_STUDENT_ID_TAG] = id
         jsonstruct.append(tmp)
 
-    print(json.dumps(rows))
+    ret = json.dumps(jsonstruct)
+    return ret
 
 
 if __name__ == "__main__":
