@@ -105,8 +105,8 @@ def get_members(browser):
         '(<td><a href="\\/profile\\/\\d*\\/">[,. a-zA-Z]*<\\/a><\\/td><td>\\d*<\\/td>)',
         re.IGNORECASE,
     )
-    nameRegex = re.compile('/profile/\\d*/?">([,. a-zA-Z]*)</a>', re.IGNORECASE)
-    idRegex = re.compile("</a></td><td>(\\d*)</td>", re.IGNORECASE)
+    nameRegex = re.compile('\\/profile\\/\\d*/?">([,. a-zA-Z]*)<\\/a>', re.IGNORECASE)
+    idRegex = re.compile("<\\/a><\\/td><td>(\\d*)<\\/td>", re.IGNORECASE)
 
     rows = []
     while 1:
