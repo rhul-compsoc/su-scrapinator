@@ -99,8 +99,11 @@ def get_members(browser):
     outerhtml = table.get_attribute("outerHTML").replace("\n", "")
 
     # Parse the HTML table
-    #rowRegex = re.compile('<tr class="msl_(alt)?row">(.*)</tr>', re.IGNORECASE)
-    rowRegex = re.compile('(<td><a href="\\/profile\\/\\d*\\/">[,. a-zA-Z]*<\\/a><\\/td><td>\\d*<\\/td>)', re.IGNORECASE)
+    # rowRegex = re.compile('<tr class="msl_(alt)?row">(.*)</tr>', re.IGNORECASE)
+    rowRegex = re.compile(
+        '(<td><a href="\\/profile\\/\\d*\\/">[,. a-zA-Z]*<\\/a><\\/td><td>\\d*<\\/td>)',
+        re.IGNORECASE,
+    )
     nameRegex = re.compile('/profile/\\d*/?">([,. a-zA-Z]*)</a>', re.IGNORECASE)
     idRegex = re.compile("</a></td><td>(\\d*)</td>", re.IGNORECASE)
 
@@ -110,7 +113,7 @@ def get_members(browser):
         if match is None:
             break
 
-        outerhtml = outerhtml[match.end(0):]
+        outerhtml = outerhtml[match.end(0) :]
         rows.append(match.group(0))
 
     logger.logInfo(f"Found {len(rows)} members")
@@ -119,7 +122,7 @@ def get_members(browser):
     for i in range(len(rows)):
         # Don't even @ me for this abomination
         name = nameRegex.search(rows[i]).groups(0)[0]
-        id = idRegex.search( rows[i]).groups(0)[0]
+        id = idRegex.search(rows[i]).groups(0)[0]
 
         tmp = dict()
         tmp[JSON_NAME_TAG] = name
