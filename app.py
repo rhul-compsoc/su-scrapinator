@@ -41,6 +41,12 @@ def main():
     f = open("members.json", "w")
     f.write(member_json)
     f.close()
+
+    logger.logInfo(f"Sending member data to {args['url']}")
+    res = requests.post(args["url"], headers={"X-Auth-Token": args["auth"]}, data = member_json)
+    logger.logInfo(f"Status: {res.status_code}")
+    logger.logInfo(f"Body: {res.content.decode('utf-8')}")
+
     browser.close()
 
 
@@ -54,14 +60,8 @@ def get_login_details():
     )
 
     parser.add_argument("-p", "--password", help="Password for RHUL", required=True)
-
-    parser.add_argument(
-        "-s",
-        "--start-date",
-        help="Date to start searching from",
-        type=datetime.fromisoformat,
-        default=start_time,
-    )
+    parser.add_argument("-l", "--url", help="Compsoc bot URL", required=True)
+    parser.add_argument("-a", "--auth", help="Compsoc bot Auth Header", required=True)
 
     return vars(parser.parse_args())
 
@@ -133,7 +133,7 @@ def get_members(browser):
             tmp = id
         jsonstruct.append(tmp)
 
-    ret = json.dumps(jsonstruct)
+    ret = json.dumps({"ids": jsonstruct})
     return ret
 
 
