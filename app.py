@@ -22,7 +22,7 @@ LOGIN_PAGE = "https://www.su.rhul.ac.uk//sso/login.ashx?ReturnUrl=/"
 MEMBER_PAGE = "https://www.su.rhul.ac.uk/organisation/memberlist/7306/"
 MAX_WAIT = 15
 LOCAL_TIME_ZONE = "Europe/London"
-TEST = False
+TEST = False 
 SAVE_FULL_DATA = False
 
 JSON_NAME_TAG = "name"
@@ -106,10 +106,10 @@ def get_members(browser):
     # Parse the HTML table
     # rowRegex = re.compile('<tr class="msl_(alt)?row">(.*)</tr>', re.IGNORECASE)
     rowRegex = re.compile(
-        '(<td><a href="\\/profile\\/\\d*\\/">[,. a-zA-Z]*<\\/a><\\/td><td>\\d*<\\/td>)',
+        '(<td><a href="\\/profile\\/\\d*\\/">[,. a-zA-Z-]*<\\/a><\\/td><td>\\d*<\\/td>)',
         re.IGNORECASE,
     )
-    nameRegex = re.compile('\\/profile\\/\\d*/?">([,. a-zA-Z]*)<\\/a>', re.IGNORECASE)
+    nameRegex = re.compile('\\/profile\\/\\d*/?">([,. a-zA-Z-]*)<\\/a>', re.IGNORECASE)
     idRegex = re.compile("<\\/a><\\/td><td>(\\d*)<\\/td>", re.IGNORECASE)
 
     rows = []
