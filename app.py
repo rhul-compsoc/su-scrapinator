@@ -15,6 +15,7 @@ import time
 import traceback
 import re
 import json
+import sys
 
 
 LOGIN_PAGE = "https://www.su.rhul.ac.uk//sso/login.ashx?ReturnUrl=/"
@@ -48,6 +49,9 @@ def main():
     logger.logInfo(f"Body: {res.content.decode('utf-8')}")
 
     browser.close()
+    if res.status_code != 200:
+        logger.logError("Non-200 response")
+        sys.exit(1)
 
 
 def get_login_details():
@@ -143,3 +147,4 @@ if __name__ == "__main__":
     except:
         err = traceback.format_exc()
         logger.logError(err)
+        sys.exit(1)
