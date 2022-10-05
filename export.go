@@ -27,6 +27,6 @@ func main() {
   log.Printf("Found %d entries", len(iJson.Ids))
 
 	for i := 0; i < len(iJson.Ids); i++ {
-		fmt.Printf("%s@live.rhul.ac.uk,", iJson.Ids[i])
+		fmt.Printf("%s,", iJson.Ids[i])
 	}
 }
