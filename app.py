@@ -14,7 +14,7 @@ import sys
 import requests
 import argparse
 
-LOGIN_PAGE = "https://www.su.rhul.ac.uk//sso/login.ashx?ReturnUrl=/"
+LOGIN_PAGE = "https://www.su.rhul.ac.uk/sso/login.ashx?ReturnUrl=/organisation/memberlist/7306/"
 MEMBER_PAGE = "https://www.su.rhul.ac.uk/organisation/memberlist/7306/"
 MAX_WAIT = 15
 LOCAL_TIME_ZONE = "Europe/London"
