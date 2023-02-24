@@ -46,6 +46,8 @@ def main():
     logger.logInfo(f"Body: {res.content.decode('utf-8')}")
 
     browser.close()
+    display.stop()
+
     if res.status_code != 200:
         logger.logError("Non-200 response")
         sys.exit(1)
