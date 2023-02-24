@@ -1,32 +1,30 @@
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
-import chromedriver_autoinstaller
 from selenium import webdriver
-from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
-from pytz import timezone, utc
-import requests
-import argparse
+from datetime import datetime
 from pyvirtualdisplay import Display
+
+import chromedriver_autoinstaller
 import logger
 import time
 import traceback
 import re
 import json
 import sys
+import requests
+import argparse
 
-
-LOGIN_PAGE = "https://www.su.rhul.ac.uk//sso/login.ashx?ReturnUrl=/"
+LOGIN_PAGE = "https://www.su.rhul.ac.uk/sso/login.ashx?ReturnUrl=/organisation/memberlist/7306/"
 MEMBER_PAGE = "https://www.su.rhul.ac.uk/organisation/memberlist/7306/"
 MAX_WAIT = 15
 LOCAL_TIME_ZONE = "Europe/London"
-TEST = False 
+TEST = False
 SAVE_FULL_DATA = False
 
 JSON_NAME_TAG = "name"
 JSON_STUDENT_ID_TAG = "student-id"
+
+WEBHOOK_MESSAGE = "yooo, {}"
 
 
 def main():
@@ -44,11 +42,21 @@ def main():
     f.close()
 
     logger.logInfo(f"Sending member data to {args['url']}")
-    res = requests.post(args["url"], headers={"X-Auth-Token": args["auth"]}, data = member_json)
+    res = requests.post(args["url"], headers={
+                        "X-Auth-Token": args["auth"]}, data=member_json)
     logger.logInfo(f"Status: {res.status_code}")
     logger.logInfo(f"Body: {res.content.decode('utf-8')}")
 
     browser.close()
+    display.stop()
+
+    result = res.content.decode('utf-8')
+
+    # So we don't spam a discord channel
+    if not "Added role to 0 members, removed role from 0 members" in result:
+        requests.post(args["webhook"], data={
+                      'username': args["webhook_name"], 'content': WEBHOOK_MESSAGE.format(result)})
+
     if res.status_code != 200:
         logger.logError("Non-200 response")
         sys.exit(1)
@@ -57,15 +65,22 @@ def main():
 def get_login_details():
     start_time = datetime.now().date()
 
-    parser = argparse.ArgumentParser(description="Mark attendance for RHUL")
+    parser = argparse.ArgumentParser(
+        description="Scrape registered members of the Computing Society")
 
     parser.add_argument(
         "-u", "--username", help="Full username for RHUL", required=True
     )
 
-    parser.add_argument("-p", "--password", help="Password for RHUL", required=True)
+    parser.add_argument("-p", "--password",
+                        help="Password for RHUL", required=True)
     parser.add_argument("-l", "--url", help="Compsoc bot URL", required=True)
-    parser.add_argument("-a", "--auth", help="Compsoc bot Auth Header", required=True)
+    parser.add_argument(
+        "-a", "--auth", help="CompSoc Bot Authentication Header", required=True)
+    parser.add_argument(
+        "-w", "--webhook", help="Webhook for reporting status after run", required=False)
+    parser.add_argument("-n", "--webhook-name",
+                        help="Name of the Webhook", required=False)
 
     return vars(parser.parse_args())
 
@@ -109,7 +124,8 @@ def get_members(browser):
         '(<td><a href="\\/profile\\/\\d*\\/">[,. a-zA-Z-]*<\\/a><\\/td><td>\\d*<\\/td>)',
         re.IGNORECASE,
     )
-    nameRegex = re.compile('\\/profile\\/\\d*/?">([,. a-zA-Z-]*)<\\/a>', re.IGNORECASE)
+    nameRegex = re.compile(
+        '\\/profile\\/\\d*/?">([,. a-zA-Z-]*)<\\/a>', re.IGNORECASE)
     idRegex = re.compile("<\\/a><\\/td><td>(\\d*)<\\/td>", re.IGNORECASE)
 
     rows = []
@@ -118,7 +134,7 @@ def get_members(browser):
         if match is None:
             break
 
-        outerhtml = outerhtml[match.end(0) :]
+        outerhtml = outerhtml[match.end(0):]
         rows.append(match.group(0))
 
     logger.logInfo(f"Found {len(rows)} members")

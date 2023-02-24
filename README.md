@@ -11,7 +11,7 @@ pip3 install -r requirements.txt
 ## Usage
 Run the following to create members.json
 ```bash
-python3 -u username -p password
+python3 -u xxxxx@live.rhul.ac.uk -p password -l <url to push data to> -a <auth token for url> -h [status webhook url] -hn [status webhook name]
 ```
 
 ### Output
