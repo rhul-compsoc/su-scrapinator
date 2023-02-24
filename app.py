@@ -1,28 +1,24 @@
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
-import chromedriver_autoinstaller
 from selenium import webdriver
-from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
-from pytz import timezone, utc
-import requests
-import argparse
+from datetime import datetime
 from pyvirtualdisplay import Display
+
+import chromedriver_autoinstaller
 import logger
 import time
 import traceback
 import re
 import json
 import sys
-
+import requests
+import argparse
 
 LOGIN_PAGE = "https://www.su.rhul.ac.uk//sso/login.ashx?ReturnUrl=/"
 MEMBER_PAGE = "https://www.su.rhul.ac.uk/organisation/memberlist/7306/"
 MAX_WAIT = 15
 LOCAL_TIME_ZONE = "Europe/London"
-TEST = False 
+TEST = False
 SAVE_FULL_DATA = False
 
 JSON_NAME_TAG = "name"
@@ -44,7 +40,8 @@ def main():
     f.close()
 
     logger.logInfo(f"Sending member data to {args['url']}")
-    res = requests.post(args["url"], headers={"X-Auth-Token": args["auth"]}, data = member_json)
+    res = requests.post(args["url"], headers={
+                        "X-Auth-Token": args["auth"]}, data=member_json)
     logger.logInfo(f"Status: {res.status_code}")
     logger.logInfo(f"Body: {res.content.decode('utf-8')}")
 
@@ -63,9 +60,11 @@ def get_login_details():
         "-u", "--username", help="Full username for RHUL", required=True
     )
 
-    parser.add_argument("-p", "--password", help="Password for RHUL", required=True)
+    parser.add_argument("-p", "--password",
+                        help="Password for RHUL", required=True)
     parser.add_argument("-l", "--url", help="Compsoc bot URL", required=True)
-    parser.add_argument("-a", "--auth", help="Compsoc bot Auth Header", required=True)
+    parser.add_argument(
+        "-a", "--auth", help="Compsoc bot Auth Header", required=True)
 
     return vars(parser.parse_args())
 
@@ -109,7 +108,8 @@ def get_members(browser):
         '(<td><a href="\\/profile\\/\\d*\\/">[,. a-zA-Z-]*<\\/a><\\/td><td>\\d*<\\/td>)',
         re.IGNORECASE,
     )
-    nameRegex = re.compile('\\/profile\\/\\d*/?">([,. a-zA-Z-]*)<\\/a>', re.IGNORECASE)
+    nameRegex = re.compile(
+        '\\/profile\\/\\d*/?">([,. a-zA-Z-]*)<\\/a>', re.IGNORECASE)
     idRegex = re.compile("<\\/a><\\/td><td>(\\d*)<\\/td>", re.IGNORECASE)
 
     rows = []
@@ -118,7 +118,7 @@ def get_members(browser):
         if match is None:
             break
 
-        outerhtml = outerhtml[match.end(0) :]
+        outerhtml = outerhtml[match.end(0):]
         rows.append(match.group(0))
 
     logger.logInfo(f"Found {len(rows)} members")
