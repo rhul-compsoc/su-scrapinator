@@ -24,6 +24,8 @@ SAVE_FULL_DATA = False
 JSON_NAME_TAG = "name"
 JSON_STUDENT_ID_TAG = "student-id"
 
+WEBHOOK_MESSAGE = "yooo, {}"
+
 
 def main():
     if not TEST:
@@ -48,6 +50,13 @@ def main():
     browser.close()
     display.stop()
 
+    result = res.content.decode('utf-8')
+
+    # So we don't spam a discord channel
+    if not "Added role to 0 members, removed role from 0 members" in result:
+        requests.post(args["webhook"], data={
+                      'username': args["webhook_name"], 'content': WEBHOOK_MESSAGE.format(result)})
+
     if res.status_code != 200:
         logger.logError("Non-200 response")
         sys.exit(1)
@@ -56,7 +65,8 @@ def main():
 def get_login_details():
     start_time = datetime.now().date()
 
-    parser = argparse.ArgumentParser(description="Mark attendance for RHUL")
+    parser = argparse.ArgumentParser(
+        description="Scrape registered members of the Computing Society")
 
     parser.add_argument(
         "-u", "--username", help="Full username for RHUL", required=True
@@ -66,7 +76,11 @@ def get_login_details():
                         help="Password for RHUL", required=True)
     parser.add_argument("-l", "--url", help="Compsoc bot URL", required=True)
     parser.add_argument(
-        "-a", "--auth", help="Compsoc bot Auth Header", required=True)
+        "-a", "--auth", help="CompSoc Bot Authentication Header", required=True)
+    parser.add_argument(
+        "-w", "--webhook", help="Webhook for reporting status after run", required=False)
+    parser.add_argument("-n", "--webhook-name",
+                        help="Name of the Webhook", required=False)
 
     return vars(parser.parse_args())
 
