@@ -3,8 +3,8 @@ The SU Scrapinator automates membership by scraping the SU.
 
 ## Setup
 Install Xvfb (X virtual frame buffer) if you want to run in
-a GUI-less environment.
-```json
+a headless environment.
+```bash
 pip3 install -r requirements.txt
 ```
 
